@@ -1,114 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>AI Chatbot</title>
-    <style>
-        body {
-            font-family: Arial;
-            background: #f4f4f4;
-            display: flex;
-            justify-content: center;
-            margin-top: 50px;
-        }
 
-        .chat-container {
-            width: 400px;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        #chat-box {
-            height: 300px;
-            border: 1px solid #ddd;
-            padding: 10px;
-            overflow-y: auto;
-            margin-bottom: 10px;
-        }
+    <title>AI PDF Chat Assistant</title>
 
-        input {
-            width: 70%;
-            padding: 10px;
-        }
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-        button {
-            padding: 10px;
-        }
-    </style>
 </head>
+
 <body>
 
-<div class="chat-container">
-    <h2>AI Chatbot 🤖</h2>
+<div class="container">
 
-    <div id="chat-box"></div>
+    <div class="header">
 
-    <!-- PDF Upload -->
-    <input type="file" id="pdf-file" accept=".pdf">
-    <br><br>
+        <h1>🤖 AI PDF Chat Assistant</h1>
+        <p>Ask questions from your uploaded PDF</p>
 
-    <!-- Chat Input -->
-    <input type="text" id="user-input" placeholder="Type message...">
+    </div>
 
-    <button onclick="sendMessage()">Send</button>
+    <div class="upload-section">
 
-    <button onclick="uploadPDF()">Upload PDF</button>
+        <input
+            type="file"
+            id="pdf-file"
+            accept=".pdf"
+        >
 
-    <button onclick="clearChat()">🗑️ Clear Chat</button>
+        <button onclick="uploadPDF()">
+            📄 Upload PDF
+        </button>
+
+    </div>
+
+    <div id="chat-box" class="chat-box">
+
+        <div class="ai-message">
+            👋 Hello! Upload a PDF and ask me anything.
+        </div>
+
+    </div>
+
+    <div class="input-section">
+
+        <input
+            type="text"
+            id="user-input"
+            placeholder="Type your question..."
+            onkeypress="handleEnter(event)"
+        >
+
+        <button id="send-btn" onclick="sendMessage()">
+            Send
+        </button>
+
+    </div>
+
+    <button
+        class="clear-btn"
+        onclick="clearChat()"
+    >
+        🗑 Clear Chat
+    </button>
+
 </div>
 
-<script>
-async function sendMessage() {
-    let input = document.getElementById("user-input");
-    let message = input.value;
-
-    if (!message) return;
-
-    let chatBox = document.getElementById("chat-box");
-
-    chatBox.innerHTML += "<p><b>You:</b> " + message + "</p>";
-
-    const response = await fetch("http://127.0.0.1:8000/chat", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ message: message })
-    });
-
-    const data = await response.json();
-
-    chatBox.innerHTML += "<p><b>AI:</b> " + data.reply + "</p>";
-
-    input.value = "";
-}
-async function uploadPDF() {
-
-    alert("Upload button clicked!");
-
-    let fileInput = document.getElementById("pdf-file");
-
-    let file = fileInput.files[0];
-
-    if (!file) {
-        alert("Please select a PDF first.");
-        return;
-    }
-
-    let formData = new FormData();
-
-    formData.append("file", file);
-
-    const response = await fetch("http://127.0.0.1:8000/upload", {
-        method: "POST",
-        body: formData
-    });
-
-    const data = await response.json();
-
-    alert("Uploaded: " + data.filename);
-}
-</script>
+<script src="script.js"></script>
 
 </body>
 </html>
