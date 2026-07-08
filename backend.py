@@ -155,12 +155,12 @@ async def upload_pdf(file: UploadFile = File(...)):
             "error": str(e)
         }
 
-        @app.post("/clear-chat")
-        def clear_chat():
-            global chat_history
+@app.post("/clear-chat")
+def clear_chat():
+    global chat_history
 
-            chat_history = []
+    chat_history = []
 
-            return {
-                "message": "Chat history cleared successfully."
-             }
+    return {
+        "message": "Chat history cleared successfully."
+    }
