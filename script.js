@@ -1,174 +1,182 @@
-const API_URL = "http://127.0.0.1:8000";
+const API_BASE = "http://127.0.0.1:8000";
 
-const chatBox = document.getElementById("chat-box");
-const sendBtn = document.getElementById("send-btn");
-const pdfInput = document.getElementById("pdf-file");
-const input = document.getElementById("user-input");
+const fileInput = document.getElementById("fileInput");
+const uploadDrop = document.getElementById("uploadDrop");
+const statusDot = document.getElementById("statusDot");
+const statusText = document.getElementById("statusText");
+const volumeMeta = document.getElementById("volumeMeta");
+const clearPdfBtn = document.getElementById("clearPdfBtn");
+const clearChatBtn = document.getElementById("clearChatBtn");
 
-function getTime() {
-    return new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit"
+const chatLog = document.getElementById("chatLog");
+const emptyState = document.getElementById("emptyState");
+const chatForm = document.getElementById("chatForm");
+const messageInput = document.getElementById("messageInput");
+const askBtn = chatForm.querySelector(".ask-btn");
+
+const marginaliaBody = document.getElementById("marginaliaBody");
+
+let pdfReady = false;
+
+// ---------- Helpers ----------
+
+function setStatus(active, text, meta) {
+  pdfReady = active;
+  statusDot.classList.toggle("active", active);
+  statusText.textContent = text;
+  volumeMeta.innerHTML = meta || "";
+}
+
+function appendMessage(role, text) {
+  emptyState.style.display = "none";
+
+  const msg = document.createElement("div");
+  msg.className = `msg ${role}`;
+
+  const label = document.createElement("span");
+  label.className = "msg-label";
+  label.textContent = role === "user" ? "You" : "The Assistant";
+
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  bubble.textContent = text;
+
+  msg.appendChild(label);
+  msg.appendChild(bubble);
+  chatLog.appendChild(msg);
+  chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+function renderSources(sources) {
+  marginaliaBody.innerHTML = "";
+
+  if (!sources || sources.length === 0) {
+    marginaliaBody.innerHTML = `<p class="marginalia-empty">No passages were drawn on for this answer.</p>`;
+    return;
+  }
+
+  sources.forEach((chunk, i) => {
+    const note = document.createElement("div");
+    note.className = "note";
+
+    const index = document.createElement("span");
+    index.className = "note-index";
+    index.textContent = `Passage ${i + 1}`;
+
+    const text = document.createElement("div");
+    text.className = "note-text";
+    text.textContent = chunk.length > 220 ? chunk.slice(0, 220) + "…" : chunk;
+
+    note.appendChild(index);
+    note.appendChild(text);
+    marginaliaBody.appendChild(note);
+  });
+}
+
+// ---------- Upload ----------
+
+uploadDrop.addEventListener("click", () => fileInput.click());
+
+fileInput.addEventListener("change", async () => {
+  const file = fileInput.files[0];
+  if (!file) return;
+
+  setStatus(false, "Indexing volume…");
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+    const res = await fetch(`${API_BASE}/upload`, {
+      method: "POST",
+      body: formData
     });
-}
+    const data = await res.json();
 
-function addMessage(message, sender) {
-
-    const div = document.createElement("div");
-
-    div.className = sender === "user"
-        ? "user-message"
-        : "ai-message";
-
-    div.innerHTML = `
-        <div>${message}</div>
-        <small style="color:gray;">${getTime()}</small>
-    `;
-
-    chatBox.appendChild(div);
-
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-async function sendMessage() {
-
-    const message = input.value.trim();
-
-    if (message === "") return;
-
-    addMessage(message, "user");
-
-    input.value = "";
-
-    sendBtn.disabled = true;
-    sendBtn.innerText = "Thinking...";
-
-    const typing = document.createElement("div");
-
-    typing.className = "ai-message";
-    typing.id = "typing";
-
-    typing.innerHTML = `
-        🤖 <b>AI</b><br>
-        <span style="font-size:20px;">● ● ●</span>
-    `;
-
-    chatBox.appendChild(typing);
-
-    chatBox.scrollTop = chatBox.scrollHeight;
-
-    try {
-
-        const response = await fetch(API_URL + "/chat", {
-
-            method: "POST",
-
-            headers: {
-                "Content-Type": "application/json"
-            },
-
-            body: JSON.stringify({
-                message: message
-            })
-
-        });
-
-        const data = await response.json();
-
-        const typingDiv = document.getElementById("typing");
-
-        if (typingDiv) {
-            typingDiv.remove();
-        }
-
-        addMessage(data.reply, "ai");
-
+    if (data.error) {
+      setStatus(false, "No volume open");
+      alert(data.error);
+      return;
     }
 
-    catch (error) {
-
-        const typingDiv = document.getElementById("typing");
-
-        if (typingDiv) {
-            typingDiv.remove();
-        }
-
-        addMessage("❌ Unable to connect to backend.", "ai");
-
-    }
-
-    finally {
-
-        sendBtn.disabled = false;
-        sendBtn.innerText = "Send";
-        input.focus();
-
-    }
-
-}
-
-async function uploadPDF() {
-
-    const file = pdfInput.files[0];
-
-    if (!file) {
-
-        alert("Please choose a PDF.");
-
-        return;
-
-    }
-
-    const formData = new FormData();
-
-    formData.append("file", file);
-
-    try {
-
-        const response = await fetch(API_URL + "/upload", {
-
-            method: "POST",
-
-            body: formData
-
-        });
-
-        const data = await response.json();
-
-        addMessage(
-            `📄 <b>${file.name}</b> uploaded successfully.`,
-            "ai"
-        );
-
-    }
-
-    catch (error) {
-
-        addMessage("❌ PDF upload failed.", "ai");
-
-    }
-
-}
-
-function clearChat() {
-
-    if (!confirm("Clear all messages?")) return;
-
-    chatBox.innerHTML = "";
-
-    addMessage(
-        "👋 Chat cleared. Upload another PDF to continue.",
-        "ai"
+    setStatus(
+      true,
+      data.filename,
+      `${data.characters.toLocaleString()} characters · ${data.chunks} passages indexed`
     );
-
-}
-
-input.addEventListener("keydown", function (e) {
-
-    if (e.key === "Enter") {
-
-        sendMessage();
-
-    }
-
+  } catch (err) {
+    console.error(err);
+    setStatus(false, "No volume open");
+    alert("Could not reach the backend. Is it running on port 8000?");
+  }
 });
+
+// ---------- Chat ----------
+
+chatForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const message = messageInput.value.trim();
+  if (!message) return;
+
+  if (!pdfReady) {
+    alert("Place a PDF on the desk first.");
+    return;
+  }
+
+  appendMessage("user", message);
+  messageInput.value = "";
+  askBtn.disabled = true;
+
+  try {
+    const res = await fetch(`${API_BASE}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message })
+    });
+    const data = await res.json();
+
+    appendMessage("assistant", data.reply);
+    renderSources(data.sources);
+  } catch (err) {
+    console.error(err);
+    appendMessage("assistant", "Something went wrong reaching the backend.");
+  } finally {
+    askBtn.disabled = false;
+  }
+});
+
+// ---------- Clear buttons ----------
+
+clearPdfBtn.addEventListener("click", async () => {
+  await fetch(`${API_BASE}/clear-pdf`, { method: "POST" });
+  setStatus(false, "No volume open");
+  marginaliaBody.innerHTML = `<p class="marginalia-empty">Passages the assistant drew on will appear here, annotated like margin notes.</p>`;
+});
+
+clearChatBtn.addEventListener("click", async () => {
+  await fetch(`${API_BASE}/clear-chat`, { method: "POST" });
+  chatLog.innerHTML = "";
+  chatLog.appendChild(emptyState);
+  emptyState.style.display = "block";
+  marginaliaBody.innerHTML = `<p class="marginalia-empty">Passages the assistant drew on will appear here, annotated like margin notes.</p>`;
+});
+
+// ---------- Initial state check ----------
+
+(async function init() {
+  try {
+    const res = await fetch(`${API_BASE}/pdf-info`);
+    const data = await res.json();
+
+    if (data.uploaded) {
+      setStatus(
+        true,
+        data.filename || "Untitled volume",
+        `${data.characters.toLocaleString()} characters · ${data.chunks_indexed} passages indexed`
+      );
+    }
+  } catch (err) {
+    // Backend not running yet — silent, upload will surface the error.
+  }
+})();

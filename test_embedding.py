@@ -1,20 +1,9 @@
-from google import genai
-from dotenv import load_dotenv
-import os
+from embedding import create_embedding
 
-load_dotenv()
+text = "Artificial Intelligence is changing the world."
 
-client = genai.Client(
-    api_key=os.getenv("GEMINI_API_KEY")
-)
+embedding = create_embedding(text)
 
-try:
-    response = client.models.embed_content(
-        model="models/gemini-embedding-001",
-        contents="Hello world"
-    )
-
-    print(response)
-
-except Exception as e:
-    print(e)
+print(type(embedding))
+print(len(embedding))
+print(embedding[:10])
