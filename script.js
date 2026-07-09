@@ -87,7 +87,8 @@ fileInput.addEventListener("change", async () => {
   formData.append("file", file);
 
   try {
-    const res = await fetch(`$/upload`, {
+    // FIXED: Changed `$/upload` to clean "/upload"
+    const res = await fetch("/upload", {
       method: "POST",
       body: formData
     });
@@ -99,15 +100,19 @@ fileInput.addEventListener("change", async () => {
       return;
     }
 
+    // FIXED: Added fallback '|| 0' so it never crashes if values are undefined
+    const charCount = (data.characters || 0).toLocaleString();
+    const chunkCount = data.chunks || 0;
+
     setStatus(
       true,
-      data.filename,
-      `${data.characters.toLocaleString()} characters · ${data.chunks} passages indexed`
+      data.filename || "Uploaded Volume",
+      `${charCount} characters · ${chunkCount} passages indexed`
     );
   } catch (err) {
     console.error(err);
     setStatus(false, "No volume open");
-    alert("Could not reach the backend. Is it running on port 8000?");
+    alert("Could not reach the backend. Please check your connection.");
   }
 });
 
@@ -129,7 +134,8 @@ chatForm.addEventListener("submit", async (e) => {
   askBtn.disabled = true;
 
   try {
-    const res = await fetch(`$/chat`, {
+    // FIXED: Changed `$/chat` to clean "/chat"
+    const res = await fetch("/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message })
@@ -149,13 +155,15 @@ chatForm.addEventListener("submit", async (e) => {
 // ---------- Clear buttons ----------
 
 clearPdfBtn.addEventListener("click", async () => {
-  await fetch(`$/clear-pdf`, { method: "POST" });
+  // FIXED: Changed `$/clear-pdf` to "/clear-pdf"
+  await fetch("/clear-pdf", { method: "POST" });
   setStatus(false, "No volume open");
   marginaliaBody.innerHTML = `<p class="marginalia-empty">Passages the assistant drew on will appear here, annotated like margin notes.</p>`;
 });
 
 clearChatBtn.addEventListener("click", async () => {
-  await fetch(`$/clear-chat`, { method: "POST" });
+  // FIXED: Changed `$/clear-chat` to "/clear-chat"
+  await fetch("/clear-chat", { method: "POST" });
   chatLog.innerHTML = "";
   chatLog.appendChild(emptyState);
   emptyState.style.display = "block";
@@ -166,14 +174,18 @@ clearChatBtn.addEventListener("click", async () => {
 
 (async function init() {
   try {
-    const res = await fetch(`$/pdf-info`);
+    // FIXED: Changed `$/pdf-info` to "/pdf-info"
+    const res = await fetch("/pdf-info");
     const data = await res.json();
 
     if (data.uploaded) {
+      const charCount = (data.characters || 0).toLocaleString();
+      const chunkCount = data.chunks_indexed || 0;
+
       setStatus(
         true,
         data.filename || "Untitled volume",
-        `${data.characters.toLocaleString()} characters · ${data.chunks_indexed} passages indexed`
+        `${charCount} characters · ${chunkCount} passages indexed`
       );
     }
   } catch (err) {
