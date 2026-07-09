@@ -1,6 +1,7 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from fastapi.responses import FileResponse  # <-- Add this import!
 
 import pdf_utils
 import embedding
@@ -12,6 +13,23 @@ import rag
 # ==========================
 
 app = FastAPI(title="AI PDF Chatbot (RAG)")
+app = FastAPI()
+
+# --- ADD THESE 3 ROUTES TO SERVE YOUR WEBSITE ---
+
+@app.get("/")
+async def serve_home():
+    return FileResponse("index.html")
+
+@app.get("/script.js")
+async def serve_js():
+    return FileResponse("script.js")
+
+@app.get("/style.css")
+async def serve_css():
+    return FileResponse("style.css")
+
+# --- YOUR EXISTING API ROUTES (e.g., /upload, /chat, etc.) REMAIN BELOW ---
 
 app.add_middleware(
     CORSMiddleware,

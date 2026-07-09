@@ -1,4 +1,4 @@
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "";
 
 const fileInput = document.getElementById("fileInput");
 const uploadDrop = document.getElementById("uploadDrop");
@@ -87,7 +87,7 @@ fileInput.addEventListener("change", async () => {
   formData.append("file", file);
 
   try {
-    const res = await fetch(`${API_BASE}/upload`, {
+    const res = await fetch(`$/upload`, {
       method: "POST",
       body: formData
     });
@@ -129,7 +129,7 @@ chatForm.addEventListener("submit", async (e) => {
   askBtn.disabled = true;
 
   try {
-    const res = await fetch(`${API_BASE}/chat`, {
+    const res = await fetch(`$/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message })
@@ -149,13 +149,13 @@ chatForm.addEventListener("submit", async (e) => {
 // ---------- Clear buttons ----------
 
 clearPdfBtn.addEventListener("click", async () => {
-  await fetch(`${API_BASE}/clear-pdf`, { method: "POST" });
+  await fetch(`$/clear-pdf`, { method: "POST" });
   setStatus(false, "No volume open");
   marginaliaBody.innerHTML = `<p class="marginalia-empty">Passages the assistant drew on will appear here, annotated like margin notes.</p>`;
 });
 
 clearChatBtn.addEventListener("click", async () => {
-  await fetch(`${API_BASE}/clear-chat`, { method: "POST" });
+  await fetch(`$/clear-chat`, { method: "POST" });
   chatLog.innerHTML = "";
   chatLog.appendChild(emptyState);
   emptyState.style.display = "block";
@@ -166,7 +166,7 @@ clearChatBtn.addEventListener("click", async () => {
 
 (async function init() {
   try {
-    const res = await fetch(`${API_BASE}/pdf-info`);
+    const res = await fetch(`$/pdf-info`);
     const data = await res.json();
 
     if (data.uploaded) {
