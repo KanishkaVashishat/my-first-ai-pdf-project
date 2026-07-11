@@ -1,7 +1,7 @@
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from fastapi.responses import FileResponse  # <-- Add this import!
+from fastapi.responses import FileResponse  
 
 import pdf_utils
 import embedding
