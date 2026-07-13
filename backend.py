@@ -8,14 +8,10 @@ import embedding
 import chroma_db
 import rag
 
-# ==========================
-# FastAPI App
-# ==========================
 
 app = FastAPI(title="AI PDF Chatbot (RAG)")
 app = FastAPI()
 
-# --- ADD THESE 3 ROUTES TO SERVE YOUR WEBSITE ---
 
 @app.get("/")
 async def serve_home():
@@ -29,7 +25,6 @@ async def serve_js():
 async def serve_css():
     return FileResponse("style.css")
 
-# --- YOUR EXISTING API ROUTES (e.g., /upload, /chat, etc.) REMAIN BELOW ---
 
 app.add_middleware(
     CORSMiddleware,
@@ -39,9 +34,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ==========================
-# Global State
-# ==========================
 
 pdf_uploaded = False
 pdf_filename = ""
@@ -49,17 +41,10 @@ pdf_characters = 0
 chat_history = []
 
 
-# ==========================
-# Request Model
-# ==========================
-
 class ChatRequest(BaseModel):
     message: str
 
 
-# ==========================
-# Home Route
-# ==========================
 
 @app.get("/")
 def home():
@@ -68,9 +53,6 @@ def home():
     }
 
 
-# ==========================
-# Upload PDF
-# ==========================
 
 @app.post("/upload")
 async def upload_pdf(file: UploadFile = File(...)):
@@ -119,9 +101,7 @@ async def upload_pdf(file: UploadFile = File(...)):
         }
 
 
-# ==========================
-# Chat Route
-# ==========================
+
 
 @app.post("/chat")
 def chat(request: ChatRequest):
@@ -165,9 +145,6 @@ def chat(request: ChatRequest):
         }
 
 
-# ==========================
-# View Chat History
-# ==========================
 
 @app.get("/history")
 def history():
@@ -176,9 +153,7 @@ def history():
     }
 
 
-# ==========================
-# Clear Chat
-# ==========================
+
 
 @app.post("/clear-chat")
 def clear_chat():
@@ -191,9 +166,7 @@ def clear_chat():
     }
 
 
-# ==========================
-# Clear PDF
-# ==========================
+
 
 @app.post("/clear-pdf")
 def clear_pdf():
@@ -212,9 +185,7 @@ def clear_pdf():
     }
 
 
-# ==========================
-# PDF Info
-# ==========================
+
 
 @app.get("/pdf-info")
 def pdf_info():
